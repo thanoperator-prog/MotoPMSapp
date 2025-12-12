@@ -1,4 +1,4 @@
-const CACHE_NAME = 'motor-pms-v1';
+const CACHE_NAME = 'motor-pms-v2';
 const ASSETS = [
   './',
   './index.html',
