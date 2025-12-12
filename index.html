@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Motor PMS - Maintenance Tracker</title>
     
-    <!-- Link to your local image file here -->
-    <!-- Make sure the file (e.g., favicon.png) is in the same folder as this HTML file -->
-    <link rel="icon" type="image/png" href="./icon-192.png">
+    <!-- BROWSER TAB ICON (Favicon) -->
+    <!-- Points to your local icon-512.png file -->
+    <link rel="icon" type="image/png" href="./icon-512.png">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -52,13 +52,9 @@
         const { useState, useEffect, useMemo, useRef } = React;
 
         // --- Lucide Icon Shim for Browser ---
-        // Dynamically create React components from global lucide.icons object
         const createIcon = (name) => ({ size = 24, className, ...props }) => {
             const iconData = lucide.icons[name];
-            if (!iconData) {
-                // console.warn(`Icon ${name} not found`); // Suppress warning for cleaner console
-                return null;
-            }
+            if (!iconData) return null;
             return React.createElement('svg', {
                 xmlns: "http://www.w3.org/2000/svg",
                 width: size,
@@ -74,7 +70,6 @@
             }, ...iconData.map(([tag, attrs]) => React.createElement(tag, attrs)));
         };
 
-        // Generate the icons used in the app
         const iconNames = [
             'LayoutDashboard', 'Bike', 'Wrench', 'Plus', 'Calendar', 'ChevronRight', 
             'AlertTriangle', 'CheckCircle2', 'History', 'Save', 'Trash2', 'Gauge', 
@@ -91,7 +86,6 @@
             return acc;
         }, {});
 
-        // Destructure icons for easy usage in code
         const { 
             LayoutDashboard, Bike, Wrench, Plus, Calendar, ChevronRight, AlertTriangle, 
             CheckCircle2, History, Save, Trash2, Gauge, MoreVertical, X, ClipboardCheck, 
@@ -103,7 +97,6 @@
 
         // --- Configuration & Constants ---
 
-        // 1. Icon Mapping
         const ICON_MAP = {
             'Droplet': Droplet, 'Cog': Cog, 'Wrench': Wrench, 'Wind': Wind, 'Thermometer': Thermometer,
             'Disc': Disc, 'CircleDot': CircleDot, 'Zap': Zap, 'Battery': Battery, 'Hammer': Hammer,
@@ -113,7 +106,6 @@
             'Key': Key, 'Bike': Bike
         };
 
-        // 2. Motor Types & Custom SVGs
         const MOTOR_TYPES = [
             { id: 'scooter', name: 'Scooter', color: '#3B82F6', text: 'white' },
             { id: 'bigbike', name: 'Big Bike', color: '#EF4444', text: 'white' },
@@ -123,86 +115,42 @@
             { id: 'atv', name: 'ATV/Quad', color: '#6B7280', text: 'white' }
         ];
 
-        // Custom App Logo Component - Updated to use your PNG
+        // --- CUSTOM APP LOGO COMPONENT ---
+        // This component is used in the header of the app
         const AppLogo = ({ className }) => (
-            <div className={`${className} flex items-center justify-center bg-blue-100 rounded-full text-blue-600`}>
+            <img 
+                src="./icon-512.png" 
+                alt="Logo" 
+                className={`${className} object-contain rounded-full`}
+                onError={(e) => {
+                    // Fallback to SVG if image fails to load
+                    e.target.style.display = 'none';
+                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                }}
+            />
+        );
+        
+        // Fallback Logo (Only shows if image fails)
+        const FallbackLogo = ({ className }) => (
+            <div className={`${className} hidden items-center justify-center bg-blue-100 rounded-full text-blue-600`}>
                 <Bike size={24} />
             </div>
         );
 
-        // Simple SVG Component for Motor Types
         const MotorTypeIcon = ({ typeId, className }) => {
             const renderIcon = () => {
                 switch (typeId) {
-                case 'scooter':
-                    return (
-                    <g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="5" cy="16" r="3" />
-                        <circle cx="19" cy="16" r="3" />
-                        <path d="M8 16h3l1-5h-3l-2 5" />
-                        <path d="M12 11h4l1 5" />
-                        <path d="M9 11l-1-6h-3" />
-                    </g>
-                    );
-                case 'bigbike':
-                    return (
-                    <g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="5" cy="16" r="3" />
-                        <circle cx="19" cy="16" r="3" />
-                        <path d="M8 16l4-5h5l2 5" />
-                        <path d="M12 11l-2-4h-4" />
-                        <path d="M14 11h3" />
-                    </g>
-                    );
-                case 'cruiser':
-                    return (
-                    <g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="5" cy="16" r="3" />
-                        <circle cx="19" cy="16" r="3" />
-                        <path d="M8 16l3-3h6l2 3" />
-                        <path d="M11 13l-1-7h-4" />
-                    </g>
-                    );
-                case 'offroad':
-                    return (
-                    <g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="5" cy="16" r="3" />
-                        <circle cx="19" cy="16" r="3" />
-                        <path d="M5 13l3-4h6l2 4" />
-                        <path d="M8 9l-1-4h-3" />
-                        <path d="M4 11l2-2" />
-                    </g>
-                    );
-                case 'atv':
-                    return (
-                    <g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="5" cy="16" r="3" />
-                        <circle cx="19" cy="16" r="3" />
-                        <path d="M5 16l2-6h10l2 6" />
-                        <path d="M10 10l-1-4h6l-1 4" />
-                    </g>
-                    );
-                case 'underbone':
-                default:
-                    return (
-                    <g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="5" cy="16" r="3" />
-                        <circle cx="19" cy="16" r="3" />
-                        <path d="M8 16l2-5h5l2 5" />
-                        <path d="M10 11l-1-5h-3" />
-                    </g>
-                    );
+                case 'scooter': return (<g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="16" r="3" /><circle cx="19" cy="16" r="3" /><path d="M8 16h3l1-5h-3l-2 5" /><path d="M12 11h4l1 5" /><path d="M9 11l-1-6h-3" /></g>);
+                case 'bigbike': return (<g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="16" r="3" /><circle cx="19" cy="16" r="3" /><path d="M8 16l4-5h5l2 5" /><path d="M12 11l-2-4h-4" /><path d="M14 11h3" /></g>);
+                case 'cruiser': return (<g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="16" r="3" /><circle cx="19" cy="16" r="3" /><path d="M8 16l3-3h6l2 3" /><path d="M11 13l-1-7h-4" /></g>);
+                case 'offroad': return (<g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="16" r="3" /><circle cx="19" cy="16" r="3" /><path d="M5 13l3-4h6l2 4" /><path d="M8 9l-1-4h-3" /><path d="M4 11l2-2" /></g>);
+                case 'atv': return (<g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="16" r="3" /><circle cx="19" cy="16" r="3" /><path d="M5 16l2-6h10l2 6" /><path d="M10 10l-1-4h6l-1 4" /></g>);
+                default: return (<g stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="16" r="3" /><circle cx="19" cy="16" r="3" /><path d="M8 16l2-5h5l2 5" /><path d="M10 11l-1-5h-3" /></g>);
                 }
             };
-
-            return (
-                <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
-                {renderIcon()}
-                </svg>
-            );
+            return <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">{renderIcon()}</svg>;
         };
 
-        // Factory Function for Fresh Defaults
         const getFreshDefaults = () => [
             { id: 'eng_oil', type: 'Engine Oil', interval: 1500, description: 'Change engine oil', icon: 'Droplet' },
             { id: 'gear_oil', type: 'Gear Oil', interval: 3000, description: 'Change gear oil', icon: 'Cog' },
@@ -217,7 +165,6 @@
 
         const DEFAULT_SCHEDULE = getFreshDefaults();
 
-        // Helper: Calculate Due Services
         const getDueMaintenance = (motor, logs, schedule) => {
             const dueList = [];
             schedule.forEach(item => {
@@ -240,7 +187,6 @@
 
         // --- Components ---
 
-        // Toast Notification Component
         const Toast = ({ message, type, onClose }) => {
             useEffect(() => {
                 const timer = setTimeout(onClose, 3000);
@@ -255,7 +201,6 @@
             );
         };
 
-        // 1. Navigation Bar
         const Navbar = ({ activeTab, setActiveTab }) => {
             const navItems = [
                 { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -283,7 +228,6 @@
             );
         };
 
-        // 2. Settings View
         const SettingsView = ({ schedule, onUpdateSchedule, onClose, onRestore, onFactoryReset, onClearLogs, showToast }) => {
             const [localSchedule, setLocalSchedule] = useState(schedule);
             const [isAdding, setIsAdding] = useState(false);
@@ -575,19 +519,15 @@
             );
         };
 
-        // 3. Dashboard View
         const DashboardView = ({ motors, logs, schedule, setActiveTab, onOpenSettings, onNavigateToMaintenance }) => {
             const recentLogs = useMemo(() => {
                 return [...logs].sort((a, b) => {
                 const dateA = new Date(a.date);
                 const dateB = new Date(b.date);
-                // 1. Date Descending
                 if (dateB - dateA !== 0) return dateB - dateA;
-                // 2. Odometer Descending (Higher km = Newer)
                 if (b.odometer - a.odometer !== 0) return b.odometer - a.odometer;
-                // 3. ID Descending (Higher ID = Created later)
                 return b.id - a.id;
-                }).slice(0, 5); // Increased from 3 to 5
+                }).slice(0, 5); 
             }, [logs]);
 
             const alerts = motors.map(motor => {
@@ -608,7 +548,11 @@
                 <div className="space-y-6 pb-24 animate-in fade-in duration-500">
                 <header className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                        <AppLogo className="w-8 h-8" />
+                        {/* Header Logo */}
+                        <div className="relative">
+                            <AppLogo className="w-8 h-8" />
+                            <FallbackLogo className="w-8 h-8" />
+                        </div>
                         <div>
                         <h1 className="text-2xl font-bold text-gray-900 leading-none">Motor PMS</h1>
                         <p className="text-gray-500 text-xs font-medium">Maintenance Tracker</p>
@@ -622,7 +566,6 @@
                     </button>
                 </header>
 
-                {/* Stats Cards - Responsive Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex items-center space-x-2 text-blue-600 mb-2">
@@ -640,7 +583,6 @@
                     <p className="text-2xl font-bold text-gray-800">{logs.length}</p>
                     <p className="text-xs text-gray-500">Total Records</p>
                     </div>
-                    {/* Placeholder cards for tablet/desktop balance */}
                     <div className="hidden md:block bg-white p-4 rounded-xl shadow-sm border border-gray-100 opacity-50">
                     <div className="flex items-center space-x-2 text-gray-400 mb-2">
                         <AlertTriangle size={20} />
@@ -661,7 +603,6 @@
                     </div>
                 </div>
 
-                {/* Alerts Section - Responsive Grid */}
                 <div className="space-y-3">
                     <h2 className="text-lg font-bold text-gray-800 flex items-center">
                     <AlertTriangle size={18} className="mr-2 text-orange-500" />
@@ -695,7 +636,6 @@
                     </div>
                 </div>
 
-                {/* Recent Activity */}
                 <div className="space-y-3">
                     <div className="flex justify-between items-center">
                     <h2 className="text-lg font-bold text-gray-800">Recent Activity</h2>
@@ -731,13 +671,12 @@
             );
         };
 
-        // 4. Motors View
         const MotorsView = ({ motors, onAddMotor, onUpdateMotor, onDeleteMotor, onNavigateToMaintenance }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [editingId, setEditingId] = useState(null);
             const [deletingId, setDeletingId] = useState(null);
-            const [modalMode, setModalMode] = useState('full'); // 'full' or 'odometer'
-            const [error, setError] = useState(''); // New state for validation errors
+            const [modalMode, setModalMode] = useState('full'); 
+            const [error, setError] = useState(''); 
             const [formData, setFormData] = useState({ 
                 name: '', model: '', plate: '', odometer: '', type: 'scooter', image: null,
                 mvFile: '', engineNumber: '', chassisNumber: '' 
@@ -810,8 +749,6 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                
-                // VALIDATION: Check if new odometer is lower than current
                 if (editingId) {
                     const currentMotor = motors.find(m => m.id === editingId);
                     if (currentMotor) {
@@ -821,7 +758,6 @@
                             return;
                         }
                     }
-                    
                     onUpdateMotor({ ...formData, id: editingId, odometer: Number(formData.odometer) });
                 } else {
                     onAddMotor({ ...formData, odometer: Number(formData.odometer) });
@@ -872,7 +808,6 @@
                             <p className="text-gray-500 text-sm mb-2 truncate">{motor.model} • {motor.plate}</p>
                             <div className="flex items-center space-x-2 bg-gray-50 w-fit px-3 py-1 rounded-md border border-gray-100"><Gauge size={14} className="text-gray-400" /><span className="font-mono font-bold text-gray-700">{motor.odometer.toLocaleString()} km</span></div>
                             
-                            {/* Technical Details Section */}
                             {(motor.mvFile || motor.engineNumber || motor.chassisNumber) && (
                                 <div className="mt-3 pt-2 border-t border-gray-100 space-y-1">
                                     {motor.mvFile && (
@@ -935,7 +870,6 @@
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
                         
-                        {/* Error Message Display */}
                         {error && (
                             <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 flex items-center">
                                 <AlertTriangle size={16} className="mr-2 shrink-0"/>
@@ -945,8 +879,6 @@
 
                         {modalMode === 'odometer' ? (
                             <div className="space-y-4">
-                                {/* Removed bike details as requested */}
-                                
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">New Odometer Reading (km)</label>
                                     <input 
@@ -958,7 +890,7 @@
                                         value={formData.odometer} 
                                         onChange={e => {
                                             setFormData({...formData, odometer: e.target.value});
-                                            if (error) setError(''); // Clear error on typing
+                                            if (error) setError('');
                                         }}
                                     />
                                     <p className="text-xs text-gray-400 mt-2 text-right">
@@ -1007,9 +939,6 @@
                                     </button>
                                     )}
                                 </div>
-
-                                {/* Motorcycle Type Section REMOVED */}
-
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nickname</label><input required className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Daily Beater" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}/></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Make & Model</label><input required className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Honda Click 125i" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})}/></div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -1063,7 +992,6 @@
             );
         };
 
-        // 5. Maintenance View
         const MaintenanceView = ({ motors, logs, schedule, onAddLog, onUpdateLog, onDeleteLog, onOpenSettings, filterId, setFilterId }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [deletingLogId, setDeletingLogId] = useState(null);
@@ -1076,21 +1004,18 @@
 
             const sortedLogs = [...filteredLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            // Determine suggestions using dynamic schedule
             const activeMotor = filterId !== 'all' ? motors.find(m => m.id === Number(filterId)) : null;
 
-            // Group Logs by Odometer (and Motor ID to be safe in "All" view)
             const groupedLogs = useMemo(() => {
                 const groups = {};
                 sortedLogs.forEach(log => {
-                // Key is composite to handle "All" view correctly: motorId-odometer
                 const key = `${log.motorId}-${log.odometer}`;
                 if (!groups[key]) {
                     groups[key] = {
                     id: key,
                     motorId: log.motorId,
                     odometer: log.odometer,
-                    date: log.date, // Use the date of the first log found (newest due to sort)
+                    date: log.date, 
                     items: [],
                     totalCost: 0
                     };
@@ -1148,7 +1073,7 @@
                 motorId: activeMotor.id,
                 type: serviceType,
                 date: new Date().toISOString().split('T')[0],
-                odometer: activeMotor.odometer, // Prefill current odometer
+                odometer: activeMotor.odometer,
                 notes: '',
                 cost: ''
                 });
@@ -1157,21 +1082,15 @@
 
             const serviceTypes = schedule.map(s => s.type).concat(["General Repair", "Wash", "Other"]);
 
-            // Calculate Status for Grid
             const getServiceStatus = (item) => {
                 if (!activeMotor) return null;
-                
-                // Updated Logic: Robust Sorting
                 const lastService = logs
                 .filter(l => l.motorId === activeMotor.id && l.type === item.type)
                 .sort((a, b) => {
                     const dateA = new Date(a.date);
                     const dateB = new Date(b.date);
-                    // 1. Sort by Date Descending
                     if (dateB - dateA !== 0) return dateB - dateA;
-                    // 2. Tie-breaker: Higher Odometer implies newer service
                     if (b.odometer - a.odometer !== 0) return b.odometer - a.odometer;
-                    // 3. Final Tie-breaker: Newer ID (creation timestamp)
                     return b.id - a.id;
                 })[0];
 
@@ -1181,7 +1100,7 @@
                 
                 let status = 'good';
                 if (remaining <= 0) status = 'due';
-                else if (remaining <= 500) status = 'near'; // Warning threshold: 500km before due
+                else if (remaining <= 500) status = 'near'; 
 
                 return {
                     lastOdometer,
@@ -1214,7 +1133,6 @@
                     </button>
                     </div>
 
-                    {/* Filter Pills */}
                     <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar">
                     <button 
                         onClick={() => setFilterId('all')}
@@ -1238,7 +1156,6 @@
                     </div>
                 </header>
 
-                {/* MAINTENANCE STATUS GRID (NEW) - Responsive Grid */}
                 {activeMotor && (
                     <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
@@ -1259,7 +1176,6 @@
                         const { status, remaining } = getServiceStatus(item);
                         const IconComp = ICON_MAP[item.icon] || Wrench;
                         
-                        // Define styles based on status
                         let styles = {
                             icon: 'bg-emerald-50 text-emerald-500',
                             badge: 'bg-emerald-100 text-emerald-600',
@@ -1314,19 +1230,16 @@
                     </div>
                 )}
 
-                {/* Timeline Header */}
                 <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center">
                     <History size={18} className="mr-2 text-gray-500" />
                     Service History
                 </h3>
 
-                {/* Grouped Timeline - Responsive */}
                 <div className="space-y-4">
                     {groupedLogs.map((group) => {
                     const bike = motors.find(m => m.id === group.motorId);
                     return (
                         <div key={group.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                        {/* Group Header */}
                         <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
                             <div>
                             <h4 className="font-bold text-gray-800 text-sm flex items-center">
@@ -1342,7 +1255,6 @@
                             )}
                         </div>
 
-                        {/* Group Items */}
                         <div className="divide-y divide-gray-50">
                             {group.items.map((log) => (
                             <div key={log.id} className="p-4 flex justify-between items-start hover:bg-gray-50 transition-colors">
@@ -1389,7 +1301,6 @@
                     )}
                 </div>
 
-                {/* Add/Edit Log Modal */}
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
                     <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -1441,7 +1352,6 @@
                     </div>
                 )}
 
-                {/* Delete Log Confirmation Modal */}
                 {deletingLogId && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
                     <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
@@ -1470,7 +1380,6 @@
             );
         };
 
-        // --- Main App Component ---
         const App = () => {
             const [activeTab, setActiveTab] = useState('dashboard');
             const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -1481,7 +1390,6 @@
                 setToast({ msg, type, id: Date.now() });
             };
             
-            // Clean initialization: No sample data
             const [motors, setMotors] = useState(() => {
                 const saved = localStorage.getItem('motor_pms_motors');
                 return saved ? JSON.parse(saved) : [];
@@ -1529,7 +1437,6 @@
             const addLog = (log) => { const newLog = { ...log, id: Date.now() }; setLogs([...logs, newLog]); const motor = motors.find(m => m.id === log.motorId); if (motor && log.odometer > motor.odometer) { updateMotor({ ...motor, odometer: log.odometer }); }};
             const updateLog = (updatedLog) => {
                 setLogs(logs.map(l => l.id === updatedLog.id ? updatedLog : l));
-                // Check if we need to update the motor's odometer (if the edited log has a higher mileage)
                 const motor = motors.find(m => m.id === updatedLog.motorId);
                 if (motor && updatedLog.odometer > motor.odometer) {
                     updateMotor({ ...motor, odometer: updatedLog.odometer });
@@ -1541,7 +1448,6 @@
             const handleResetSchedule = () => { setSchedule(DEFAULT_SCHEDULE); };
             const handleNavigateToMaintenance = (filterId) => { setMaintenanceFilterId(filterId); setActiveTab('maintenance'); };
             
-            // Restore Functionality
             const handleFullRestore = (data) => {
                 if (data.motors) setMotors(data.motors);
                 if (data.logs) setLogs(data.logs);
@@ -1549,14 +1455,12 @@
                 showToast("Data restored successfully!");
             };
 
-            // Clear Logs Handler
             const handleClearLogs = () => {
                 setLogs([]);
                 localStorage.setItem('motor_pms_logs', JSON.stringify([]));
                 showToast("All logs cleared.");
             };
 
-            // Factory Reset Handler
             const handleFactoryReset = () => {
                 setMotors([]);
                 setLogs([]);
