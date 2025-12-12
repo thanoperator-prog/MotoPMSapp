@@ -753,6 +753,8 @@
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [editingId, setEditingId] = useState(null);
             const [deletingId, setDeletingId] = useState(null);
+            const [modalMode, setModalMode] = useState('full'); // 'full' or 'odometer'
+            const [error, setError] = useState(''); // New state for validation errors
             const [formData, setFormData] = useState({ 
                 name: '', model: '', plate: '', odometer: '', type: 'scooter', image: null,
                 mvFile: '', engineNumber: '', chassisNumber: '' 
@@ -760,6 +762,8 @@
             const fileInputRef = useRef(null);
 
             const openAddModal = () => {
+                setModalMode('full');
+                setError('');
                 setFormData({ 
                     name: '', model: '', plate: '', odometer: '', type: 'scooter', image: null,
                     mvFile: '', engineNumber: '', chassisNumber: ''
@@ -769,6 +773,23 @@
             };
 
             const openEditModal = (motor) => {
+                setModalMode('full');
+                setError('');
+                setFormData({ 
+                    ...motor, 
+                    type: motor.type || 'scooter', 
+                    image: motor.image || null,
+                    mvFile: motor.mvFile || '',
+                    engineNumber: motor.engineNumber || '',
+                    chassisNumber: motor.chassisNumber || ''
+                });
+                setEditingId(motor.id);
+                setIsModalOpen(true);
+            };
+
+            const openOdometerModal = (motor) => {
+                setModalMode('odometer');
+                setError('');
                 setFormData({ 
                     ...motor, 
                     type: motor.type || 'scooter', 
@@ -806,10 +827,21 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
+                
+                // VALIDATION: Check if new odometer is lower than current
                 if (editingId) {
-                onUpdateMotor({ ...formData, id: editingId, odometer: Number(formData.odometer) });
+                    const currentMotor = motors.find(m => m.id === editingId);
+                    if (currentMotor) {
+                        const newOdo = Number(formData.odometer);
+                        if (newOdo < currentMotor.odometer) {
+                            setError(`Cannot rollback! Current: ${currentMotor.odometer.toLocaleString()} km`);
+                            return;
+                        }
+                    }
+                    
+                    onUpdateMotor({ ...formData, id: editingId, odometer: Number(formData.odometer) });
                 } else {
-                onAddMotor({ ...formData, odometer: Number(formData.odometer) });
+                    onAddMotor({ ...formData, odometer: Number(formData.odometer) });
                 }
                 setIsModalOpen(false);
             };
@@ -884,7 +916,7 @@
                         </div>
                         <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center relative z-10">
                             <button 
-                            onClick={(e) => { e.stopPropagation(); openEditModal(motor); }}
+                            onClick={(e) => { e.stopPropagation(); openOdometerModal(motor); }}
                             className="text-sm font-medium text-gray-600 hover:text-blue-600 active:scale-95"
                             >
                             Update Odometer
@@ -913,82 +945,108 @@
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
                     <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                        <h3 className="font-bold text-gray-800">{editingId ? 'Edit Motor' : 'Add New Motor'}</h3>
+                        <h3 className="font-bold text-gray-800">
+                            {modalMode === 'odometer' ? 'Update Odometer' : (editingId ? 'Edit Motor' : 'Add New Motor')}
+                        </h3>
                         <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 active:scale-90"><X size={20}/></button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
-                        <div className="flex flex-col items-center justify-center">
-                            <div 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-200 transition-colors relative group"
-                            >
-                            {formData.image ? (
-                                <>
-                                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Camera size={20} className="text-white" />
-                                </div>
-                                </>
-                            ) : (
-                                <div className="text-center p-2">
-                                <Camera size={24} className="mx-auto text-gray-400 mb-1" />
-                                <span className="text-[10px] text-gray-500 font-medium leading-tight">Upload Photo</span>
-                                </div>
-                            )}
+                        
+                        {/* Error Message Display */}
+                        {error && (
+                            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 flex items-center">
+                                <AlertTriangle size={16} className="mr-2 shrink-0"/>
+                                {error}
                             </div>
-                            <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleImageChange} 
-                            accept="image/*" 
-                            className="hidden" 
-                            />
-                            {formData.image && (
-                            <button 
-                                type="button" 
-                                onClick={() => setFormData(prev => ({ ...prev, image: null }))} 
-                                className="text-xs text-red-500 mt-2 font-medium hover:underline"
-                            >
-                                Remove Photo
-                            </button>
-                            )}
-                        </div>
+                        )}
 
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Motorcycle Type</label>
-                            <div className="grid grid-cols-3 gap-2">
-                            {MOTOR_TYPES.map(type => (
-                                <button
-                                type="button"
-                                key={type.id}
-                                onClick={() => setFormData({...formData, type: type.id})}
-                                className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${formData.type === type.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-gray-200 hover:border-gray-300'}`}
-                                >
-                                <div style={{ color: type.color }} className="mb-1"><MotorTypeIcon typeId={type.id} className="w-8 h-8" /></div>
-                                <span className="text-[10px] text-center font-medium text-gray-600 truncate w-full">{type.name}</span>
+                        {modalMode === 'odometer' ? (
+                            <div className="space-y-4">
+                                {/* Removed bike details as requested */}
+                                
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">New Odometer Reading (km)</label>
+                                    <input 
+                                        required 
+                                        type="number" 
+                                        autoFocus
+                                        className="w-full p-4 text-lg font-mono font-bold rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" 
+                                        placeholder="0" 
+                                        value={formData.odometer} 
+                                        onChange={e => {
+                                            setFormData({...formData, odometer: e.target.value});
+                                            if (error) setError(''); // Clear error on typing
+                                        }}
+                                    />
+                                    <p className="text-xs text-gray-400 mt-2 text-right">
+                                        Current: {motors.find(m => m.id === editingId)?.odometer.toLocaleString()} km
+                                    </p>
+                                </div>
+                                <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-transform active:scale-95">
+                                    Update Odometer
                                 </button>
-                            ))}
                             </div>
-                        </div>
+                        ) : (
+                            <>
+                                <div className="flex flex-col items-center justify-center">
+                                    <div 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-200 transition-colors relative group"
+                                    >
+                                    {formData.image ? (
+                                        <>
+                                        <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Camera size={20} className="text-white" />
+                                        </div>
+                                        </>
+                                    ) : (
+                                        <div className="text-center p-2">
+                                        <Camera size={24} className="mx-auto text-gray-400 mb-1" />
+                                        <span className="text-[10px] text-gray-500 font-medium leading-tight">Upload Photo</span>
+                                        </div>
+                                    )}
+                                    </div>
+                                    <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    onChange={handleImageChange} 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    />
+                                    {formData.image && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setFormData(prev => ({ ...prev, image: null }))} 
+                                        className="text-xs text-red-500 mt-2 font-medium hover:underline"
+                                    >
+                                        Remove Photo
+                                    </button>
+                                    )}
+                                </div>
 
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nickname</label><input required className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Daily Beater" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}/></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Make & Model</label><input required className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Honda Click 125i" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})}/></div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Plate No.</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="ABC 123" value={formData.plate} onChange={e => setFormData({...formData, plate: e.target.value})}/></div>
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Odometer (km)</label><input required type="number" className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0" value={formData.odometer} onChange={e => setFormData({...formData, odometer: e.target.value})}/></div>
-                        </div>
+                                {/* Motorcycle Type Section REMOVED */}
 
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">MV File No.</label>
-                            <input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="1234-567890" value={formData.mvFile} onChange={e => setFormData({...formData, mvFile: e.target.value})}/>
-                        </div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nickname</label><input required className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Daily Beater" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}/></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Make & Model</label><input required className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Honda Click 125i" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})}/></div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Plate No.</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="ABC 123" value={formData.plate} onChange={e => setFormData({...formData, plate: e.target.value})}/></div>
+                                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Odometer (km)</label><input required type="number" className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0" value={formData.odometer} onChange={e => setFormData({...formData, odometer: e.target.value})}/></div>
+                                </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Engine Number</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="E123..." value={formData.engineNumber} onChange={e => setFormData({...formData, engineNumber: e.target.value})}/></div>
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Chassis Number</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="C456..." value={formData.chassisNumber} onChange={e => setFormData({...formData, chassisNumber: e.target.value})}/></div>
-                        </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">MV File No.</label>
+                                    <input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="1234-567890" value={formData.mvFile} onChange={e => setFormData({...formData, mvFile: e.target.value})}/>
+                                </div>
 
-                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-transform active:scale-95">{editingId ? 'Update Motor' : 'Save Motor'}</button>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Engine Number</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="E123..." value={formData.engineNumber} onChange={e => setFormData({...formData, engineNumber: e.target.value})}/></div>
+                                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Chassis Number</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="C456..." value={formData.chassisNumber} onChange={e => setFormData({...formData, chassisNumber: e.target.value})}/></div>
+                                </div>
+
+                                <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-transform active:scale-95">{editingId ? 'Update Motor' : 'Save Motor'}</button>
+                            </>
+                        )}
                         </form>
                     </div>
                     </div>
