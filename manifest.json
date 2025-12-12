@@ -1,6 +1,6 @@
 {
   "name": "Motor PMS Tracker",
-  "short_name": "MotoPMS",
+  "short_name": "MotorPMS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
