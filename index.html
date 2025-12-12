@@ -753,17 +753,30 @@
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [editingId, setEditingId] = useState(null);
             const [deletingId, setDeletingId] = useState(null);
-            const [formData, setFormData] = useState({ name: '', model: '', plate: '', odometer: '', type: 'scooter', image: null });
+            const [formData, setFormData] = useState({ 
+                name: '', model: '', plate: '', odometer: '', type: 'scooter', image: null,
+                mvFile: '', engineNumber: '', chassisNumber: '' 
+            });
             const fileInputRef = useRef(null);
 
             const openAddModal = () => {
-                setFormData({ name: '', model: '', plate: '', odometer: '', type: 'scooter', image: null });
+                setFormData({ 
+                    name: '', model: '', plate: '', odometer: '', type: 'scooter', image: null,
+                    mvFile: '', engineNumber: '', chassisNumber: ''
+                });
                 setEditingId(null);
                 setIsModalOpen(true);
             };
 
             const openEditModal = (motor) => {
-                setFormData({ ...motor, type: motor.type || 'scooter', image: motor.image || null });
+                setFormData({ 
+                    ...motor, 
+                    type: motor.type || 'scooter', 
+                    image: motor.image || null,
+                    mvFile: motor.mvFile || '',
+                    engineNumber: motor.engineNumber || '',
+                    chassisNumber: motor.chassisNumber || ''
+                });
                 setEditingId(motor.id);
                 setIsModalOpen(true);
             };
@@ -940,6 +953,17 @@
                             <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Plate No.</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="ABC 123" value={formData.plate} onChange={e => setFormData({...formData, plate: e.target.value})}/></div>
                             <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Odometer (km)</label><input required type="number" className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0" value={formData.odometer} onChange={e => setFormData({...formData, odometer: e.target.value})}/></div>
                         </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">MV File No.</label>
+                            <input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="1234-567890" value={formData.mvFile} onChange={e => setFormData({...formData, mvFile: e.target.value})}/>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Engine Number</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="E123..." value={formData.engineNumber} onChange={e => setFormData({...formData, engineNumber: e.target.value})}/></div>
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Chassis Number</label><input className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="C456..." value={formData.chassisNumber} onChange={e => setFormData({...formData, chassisNumber: e.target.value})}/></div>
+                        </div>
+
                         <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-transform active:scale-95">{editingId ? 'Update Motor' : 'Save Motor'}</button>
                         </form>
                     </div>
